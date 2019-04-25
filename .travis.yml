@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t eternelman/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run eternelman/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t eternelman/multi-client ./client
+  - docker build -t eternelman/multi-nginx ./nginx
+  - docker build -t eternelman/multi-server ./server
+  - docker build -t eternelman/multi-worker ./worker
+  # Log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push the images to DockerHub
+  - docker push eternelman/multi-client
+  - docker push eternelman/multi-nginx
+  - docker push eternelman/multi-server
+  - docker push eternelman/multi-worker
